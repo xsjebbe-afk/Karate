@@ -3,679 +3,748 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Karate Pensum</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>SGR Karate · Pensum</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08080d;
+  --surface:#111118;
+  --surface2:#1a1a24;
+  --accent:#c8a96e;
+  --accent-glow:rgba(200,169,110,0.15);
+  --red:#e84545;
+  --green:#50c87a;
+  --text:#f0ede8;
+  --muted:#6b6870;
+  --border:rgba(200,169,110,0.18);
+  --belt-color:#c8a96e;
+}
+html,body{width:100%;height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
 
-  :root {
-    --bg: #0a0a0f;
-    --card-bg: #111118;
-    --accent: #c8a96e;
-    --accent2: #e84545;
-    --text: #f0ede8;
-    --muted: #6b6870;
-    --border: rgba(200,169,110,0.2);
-  }
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;transition:opacity .3s,transform .3s;z-index:1}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(20px)}
 
-  html, body {
-    width: 100%; height: 100%;
-    background: var(--bg);
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    overflow: hidden;
-    touch-action: pan-y;
-  }
+/* ── BACKGROUND KANJI ── */
+#bgKanji{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+#bgKanji span{position:absolute;font-family:'Noto Serif JP',serif;color:rgba(200,169,110,0.035);font-size:clamp(70px,18vw,140px);font-weight:700;animation:drift linear infinite;user-select:none}
+@keyframes drift{0%{transform:translateY(110vh) rotate(-12deg);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-15vh) rotate(12deg);opacity:0}}
 
-  /* Floating background kanji */
-  .bg-kanji {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 0;
-  }
-  .bg-kanji span {
-    position: absolute;
-    font-family: 'Noto Serif JP', serif;
-    color: rgba(200,169,110,0.04);
-    font-size: clamp(80px, 20vw, 160px);
-    font-weight: 700;
-    animation: drift linear infinite;
-    user-select: none;
-  }
-  @keyframes drift {
-    0% { transform: translateY(110vh) rotate(-15deg); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(-20vh) rotate(15deg); opacity: 0; }
-  }
+/* ── SETUP SCREEN ── */
+#setupScreen{padding:0 20px;justify-content:flex-start;overflow-y:auto;padding-bottom:40px}
+.setup-header{padding-top:56px;padding-bottom:24px;text-align:center;width:100%}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:5px;color:var(--accent);opacity:.7;margin-bottom:6px}
+.setup-title{font-family:'Noto Serif JP',serif;font-size:28px;font-weight:300;letter-spacing:2px;color:var(--text)}
 
-  /* App shell */
-  .app {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-    padding: 24px 16px;
-  }
+.section-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;margin-top:24px;width:100%;max-width:420px}
 
-  /* Header */
-  .header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    padding: 52px 24px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 10;
-  }
-  .header-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 13px;
-    letter-spacing: 4px;
-    color: var(--accent);
-    opacity: 0.8;
-  }
-  .category-badge {
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    color: var(--muted);
-  }
+/* Belt grid */
+.belt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px}
+.belt-btn{
+  padding:14px 12px;border-radius:16px;
+  border:1px solid rgba(255,255,255,0.07);
+  background:var(--surface);
+  cursor:pointer;transition:all .2s;
+  text-align:left;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;overflow:hidden;
+}
+.belt-btn::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:var(--belt-color);border-radius:4px 0 0 4px;
+  transition:width .2s;
+}
+.belt-btn.selected{border-color:var(--accent);background:rgba(200,169,110,0.08)}
+.belt-btn.selected::before{width:100%;opacity:.06}
+.belt-btn.selected .belt-kyu{color:var(--accent)}
+.belt-kyu{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--muted);transition:color .2s}
+.belt-name{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.5px}
+.belt-count{font-size:10px;color:var(--muted);opacity:.6;margin-top:4px}
 
-  /* Progress */
-  .progress-bar {
-    position: fixed;
-    top: 0; left: 0;
-    height: 2px;
-    background: var(--accent);
-    transition: width 0.4s ease;
-    z-index: 20;
-    box-shadow: 0 0 8px var(--accent);
-  }
+/* Category toggles */
+.cat-grid{display:flex;flex-wrap:wrap;gap:8px;width:100%;max-width:420px}
+.cat-toggle{
+  padding:8px 16px;border-radius:20px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:var(--surface);
+  font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
+  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.cat-toggle.selected{background:rgba(200,169,110,0.1);border-color:var(--accent);color:var(--accent)}
 
-  /* Card container */
-  .card-container {
-    width: 100%;
-    max-width: 380px;
-    perspective: 1000px;
-    position: relative;
-  }
+/* Mode toggle */
+.mode-row{display:flex;gap:10px;width:100%;max-width:420px}
+.mode-card{
+  flex:1;padding:16px 12px;border-radius:16px;
+  border:1px solid rgba(255,255,255,0.07);
+  background:var(--surface);cursor:pointer;
+  transition:all .2s;text-align:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.mode-card.selected{border-color:var(--accent);background:rgba(200,169,110,0.08)}
+.mode-icon{font-size:22px;margin-bottom:6px}
+.mode-name{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.mode-card.selected .mode-name{color:var(--accent)}
 
-  /* Card */
-  .card {
-    width: 100%;
-    min-height: 420px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-  }
-  .card.flipped { transform: rotateY(180deg); }
-  .card.slide-out-left {
-    animation: slideOutLeft 0.35s ease forwards;
-  }
-  .card.slide-out-right {
-    animation: slideOutRight 0.35s ease forwards;
-  }
-  .card.slide-in-left {
-    animation: slideInLeft 0.35s ease forwards;
-  }
-  .card.slide-in-right {
-    animation: slideInRight 0.35s ease forwards;
-  }
+/* Direction toggle */
+.dir-row{display:flex;gap:10px;width:100%;max-width:420px}
+.dir-btn{
+  flex:1;padding:12px;border-radius:14px;
+  border:1px solid rgba(255,255,255,0.07);
+  background:var(--surface);cursor:pointer;
+  transition:all .2s;text-align:center;font-size:12px;
+  letter-spacing:1px;color:var(--muted);
+  -webkit-tap-highlight-color:transparent;
+}
+.dir-btn.selected{border-color:var(--accent);background:rgba(200,169,110,0.08);color:var(--accent)}
+.dir-arrow{font-size:18px;display:block;margin-bottom:4px}
 
-  @keyframes slideOutLeft {
-    to { transform: translateX(-110%) rotate(-8deg); opacity: 0; }
-  }
-  @keyframes slideOutRight {
-    to { transform: translateX(110%) rotate(8deg); opacity: 0; }
-  }
-  @keyframes slideInLeft {
-    from { transform: translateX(60%) rotate(4deg); opacity: 0; }
-    to { transform: translateX(0) rotate(0deg); opacity: 1; }
-  }
-  @keyframes slideInRight {
-    from { transform: translateX(-60%) rotate(-4deg); opacity: 0; }
-    to { transform: translateX(0) rotate(0deg); opacity: 1; }
-  }
+/* Start button */
+.start-btn{
+  width:100%;max-width:420px;margin-top:28px;
+  padding:18px;border-radius:100px;
+  background:var(--accent);color:var(--bg);
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:5px;
+  border:none;cursor:pointer;transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.start-btn:disabled{opacity:.3;cursor:not-allowed}
+.start-btn:not(:disabled):active{transform:scale(.97)}
+.card-count-label{text-align:center;font-size:12px;color:var(--muted);margin-top:10px;width:100%;max-width:420px;letter-spacing:1px}
 
-  .card-face {
-    position: absolute;
-    inset: 0;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    border-radius: 24px;
-    padding: 40px 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    min-height: 420px;
-  }
+/* ── CARD SCREEN ── */
+#cardScreen{justify-content:center}
 
-  .card-front {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    box-shadow:
-      0 0 0 1px rgba(200,169,110,0.05),
-      0 24px 80px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(200,169,110,0.1);
-  }
+.topbar{position:fixed;top:0;left:0;right:0;padding:52px 20px 12px;display:flex;align-items:center;justify-content:space-between;z-index:10}
+.back-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted);-webkit-tap-highlight-color:transparent;transition:all .2s}
+.back-btn:active{background:rgba(200,169,110,.1);color:var(--accent)}
+.topbar-center{display:flex;flex-direction:column;align-items:center}
+.topbar-belt{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);opacity:.8}
+.topbar-cat{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px}
+.shuffle-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted);-webkit-tap-highlight-color:transparent;transition:all .2s}
+.shuffle-btn:active{background:rgba(200,169,110,.1);color:var(--accent)}
 
-  .card-back {
-    background: linear-gradient(145deg, #16141f, #0f0e17);
-    border: 1px solid rgba(232,69,69,0.2);
-    transform: rotateY(180deg);
-    box-shadow:
-      0 0 0 1px rgba(232,69,69,0.05),
-      0 24px 80px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(232,69,69,0.1);
-  }
+.progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--accent);transition:width .4s ease;z-index:20;box-shadow:0 0 8px var(--accent)}
 
-  .cat-icon {
-    font-size: 42px;
-    margin-bottom: 20px;
-    filter: drop-shadow(0 0 12px rgba(200,169,110,0.3));
-  }
+.card-wrap{width:100%;max-width:400px;padding:0 20px;perspective:1000px}
+.card{
+  width:100%;min-height:400px;
+  transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;position:relative;
+}
+.card.flipped{transform:rotateY(180deg)}
+@keyframes slideOutL{to{transform:translateX(-115%) rotate(-6deg);opacity:0}}
+@keyframes slideOutR{to{transform:translateX(115%) rotate(6deg);opacity:0}}
+@keyframes slideInL{from{transform:translateX(60%) rotate(4deg);opacity:0}to{transform:translateX(0) rotate(0);opacity:1}}
+@keyframes slideInR{from{transform:translateX(-60%) rotate(-4deg);opacity:0}to{transform:translateX(0) rotate(0);opacity:1}}
+.card.out-left{animation:slideOutL .3s ease forwards}
+.card.out-right{animation:slideOutR .3s ease forwards}
+.card.in-left{animation:slideInL .32s ease forwards}
+.card.in-right{animation:slideInR .32s ease forwards}
 
-  .japanese-term {
-    font-family: 'Noto Serif JP', serif;
-    font-size: clamp(22px, 6vw, 30px);
-    font-weight: 400;
-    color: var(--accent);
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
+.face{
+  position:absolute;inset:0;min-height:400px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:24px;padding:36px 28px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+}
+.face-front{
+  background:var(--surface);
+  border:1px solid var(--border);
+  box-shadow:0 0 0 1px rgba(200,169,110,.05),0 24px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(200,169,110,.08);
+}
+.face-back{
+  background:linear-gradient(145deg,#16141f,#0f0e17);
+  border:1px solid rgba(232,69,69,.18);
+  transform:rotateY(180deg);
+  box-shadow:0 0 0 1px rgba(232,69,69,.05),0 24px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(232,69,69,.08);
+}
 
-  .hint-text {
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-top: 28px;
-  }
-  .hint-text span {
-    display: inline-block;
-    animation: pulse 2s ease infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-  }
+.card-cat-badge{
+  font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--muted);padding:5px 12px;border:1px solid rgba(255,255,255,.07);
+  border-radius:20px;margin-bottom:24px;
+}
+.card-term{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(18px,5vw,26px);font-weight:400;
+  color:var(--accent);letter-spacing:.5px;line-height:1.4;margin-bottom:6px;
+}
+.card-sub{font-size:12px;color:var(--muted);letter-spacing:1.5px;margin-top:8px}
+.tap-hint{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:32px;animation:blink 2.5s ease infinite}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:.8}}
 
-  /* Back face */
-  .danish-translation {
-    font-size: clamp(26px, 7vw, 36px);
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.2;
-    margin-bottom: 12px;
-  }
+.card-meaning{
+  font-size:clamp(22px,6vw,32px);font-weight:500;color:var(--text);
+  line-height:1.25;margin-bottom:10px;
+}
+.card-back-term{font-family:'Noto Serif JP',serif;font-size:14px;color:var(--muted);margin-top:8px}
+.card-back-cat{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);margin-top:16px;opacity:.8}
 
-  .category-label {
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--accent2);
-    margin-top: 16px;
-    opacity: 0.8;
-  }
+/* Quiz options */
+.quiz-opts{display:flex;flex-direction:column;gap:9px;width:100%;margin-top:16px}
+.qopt{
+  padding:13px 18px;border-radius:14px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.02);
+  color:var(--text);font-size:14px;cursor:pointer;
+  transition:all .2s;text-align:left;
+  -webkit-tap-highlight-color:transparent;font-family:'DM Sans',sans-serif;
+}
+.qopt:not([disabled]):active{background:rgba(200,169,110,.06);border-color:var(--border)}
+.qopt.correct{background:rgba(80,200,122,.12);border-color:rgba(80,200,122,.35);color:var(--green)}
+.qopt.wrong{background:rgba(232,69,69,.1);border-color:rgba(232,69,69,.3);color:var(--red)}
 
-  .term-reminder {
-    font-family: 'Noto Serif JP', serif;
-    font-size: 14px;
-    color: var(--muted);
-    margin-top: 8px;
-  }
+/* Dots */
+.dots-row{display:flex;gap:5px;margin-top:20px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:280px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--muted);opacity:.25;transition:all .3s}
+.dot.done{background:var(--muted);opacity:.5}
+.dot.active{background:var(--accent);opacity:1;width:18px;border-radius:3px}
 
-  /* Nav dots */
-  .nav-dots {
-    display: flex;
-    gap: 6px;
-    margin-top: 28px;
-    align-items: center;
-  }
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--muted);
-    opacity: 0.3;
-    transition: all 0.3s ease;
-  }
-  .dot.active {
-    background: var(--accent);
-    opacity: 1;
-    width: 20px;
-    border-radius: 3px;
-  }
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;padding:16px 24px 36px;display:flex;align-items:center;justify-content:space-between;z-index:10;background:linear-gradient(transparent,var(--bg) 60%)}
+.nav-btn{width:52px;height:52px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--muted);-webkit-tap-highlight-color:transparent;transition:all .2s;backdrop-filter:blur(10px)}
+.nav-btn:active{background:rgba(200,169,110,.1);border-color:var(--accent);color:var(--accent);transform:scale(.92)}
+.nav-counter{font-size:13px;color:var(--muted);letter-spacing:1px;text-align:center}
+.nav-counter b{color:var(--accent);font-weight:500}
 
-  /* Swipe hint */
-  .swipe-hint {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    z-index: 10;
-  }
-  .swipe-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,0.03);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    backdrop-filter: blur(10px);
-    font-size: 18px;
-    color: var(--muted);
-    -webkit-tap-highlight-color: transparent;
-  }
-  .swipe-btn:active {
-    background: rgba(200,169,110,0.1);
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: scale(0.92);
-  }
+/* Score overlay */
+#scoreScreen{background:rgba(8,8,13,.97);z-index:50}
+.score-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:32px}
+.score-title{font-family:'Bebas Neue',sans-serif;font-size:60px;color:var(--accent);letter-spacing:6px}
+.score-sub{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:40px}
+.score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:340px;margin-bottom:40px}
+.score-tile{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 10px;text-align:center}
+.score-num{font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:1}
+.score-lbl{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.score-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
+.btn-primary{padding:16px;border-radius:100px;background:var(--accent);color:var(--bg);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;border:none;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.btn-primary:active{transform:scale(.96)}
+.btn-secondary{padding:14px;border-radius:100px;background:transparent;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;border:1px solid var(--border);cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.btn-secondary:active{background:rgba(255,255,255,.04)}
 
-  .counter {
-    font-size: 13px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    min-width: 52px;
-    text-align: center;
-  }
-  .counter b {
-    color: var(--accent);
-    font-weight: 500;
-  }
+/* Shuffle flash */
+#shuffleFlash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:60}
+#shuffleFlash span{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:6px;color:var(--accent);opacity:0}
+#shuffleFlash span.show{animation:flashPop .7s ease forwards}
+@keyframes flashPop{0%{opacity:0;transform:scale(.8)}25%{opacity:1;transform:scale(1.05)}70%{opacity:1}100%{opacity:0;transform:scale(1)}}
 
-  /* Mode toggle */
-  .mode-toggle {
-    position: fixed;
-    top: 52px;
-    right: 24px;
-    display: flex;
-    gap: 4px;
-    z-index: 20;
-  }
-  .mode-btn {
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 5px 10px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    -webkit-tap-highlight-color: transparent;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid transparent;
-  }
-  .mode-btn.active {
-    color: var(--accent);
-    border-color: var(--border);
-    background: rgba(200,169,110,0.06);
-  }
+/* Stats bar on setup */
+.stats-bar{display:flex;gap:10px;width:100%;max-width:420px;margin-top:4px}
+.stat-tile{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 10px;text-align:center}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent);line-height:1}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
 
-  /* Category filter */
-  .cat-filter {
-    position: fixed;
-    top: 80px;
-    left: 0; right: 0;
-    display: flex;
-    gap: 8px;
-    padding: 0 20px;
-    overflow-x: auto;
-    z-index: 10;
-    scrollbar-width: none;
-    justify-content: center;
-  }
-  .cat-filter::-webkit-scrollbar { display: none; }
-  .cat-btn {
-    flex-shrink: 0;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    padding: 6px 14px;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-    -webkit-tap-highlight-color: transparent;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.08);
-    white-space: nowrap;
-    text-transform: uppercase;
-  }
-  .cat-btn.active {
-    color: var(--bg);
-    background: var(--accent);
-    border-color: var(--accent);
-  }
+/* Belt progress ring on belt btn */
+.belt-progress{font-size:10px;color:var(--green);margin-top:4px;letter-spacing:.5px}
 
-  /* Score overlay */
-  .score-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(10,10,15,0.97);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s;
-  }
-  .score-overlay.visible {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .score-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 56px;
-    color: var(--accent);
-    letter-spacing: 6px;
-    margin-bottom: 8px;
-  }
-  .score-sub {
-    color: var(--muted);
-    font-size: 14px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 48px;
-  }
-  .score-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-    width: 100%;
-    max-width: 340px;
-    margin-bottom: 48px;
-  }
-  .score-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px 12px;
-    text-align: center;
-  }
-  .score-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 42px;
-    color: var(--accent);
-    line-height: 1;
-  }
-  .score-lbl {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
-  .restart-btn {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    letter-spacing: 4px;
-    padding: 16px 48px;
-    border-radius: 100px;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .restart-btn:active {
-    transform: scale(0.96);
-  }
+/* Know/don't know buttons on card back */
+.know-row{display:flex;gap:10px;width:100%;margin-top:20px}
+.know-btn{flex:1;padding:13px;border-radius:14px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.5px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.know-btn.yes{background:rgba(80,200,122,.15);color:var(--green);border:1px solid rgba(80,200,122,.3)}
+.know-btn.no{background:rgba(232,69,69,.1);color:var(--red);border:1px solid rgba(232,69,69,.25)}
+.know-btn:active{transform:scale(.95)}
 
-  /* Quiz mode */
-  .quiz-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    margin-top: 12px;
-  }
-  .quiz-opt {
-    padding: 14px 20px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.02);
-    color: var(--text);
-    font-size: 15px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .quiz-opt.correct {
-    background: rgba(80,200,120,0.15);
-    border-color: rgba(80,200,120,0.4);
-    color: #50c878;
-  }
-  .quiz-opt.wrong {
-    background: rgba(232,69,69,0.1);
-    border-color: rgba(232,69,69,0.3);
-    color: var(--accent2);
-  }
-  .quiz-opt:not([disabled]):hover {
-    border-color: var(--border);
-    background: rgba(200,169,110,0.06);
-  }
-
-  /* Shuffle indicator */
-  .shuffle-indicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 5px;
-    color: var(--accent);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 50;
-    transition: opacity 0.3s;
-  }
-  .shuffle-indicator.show {
-    opacity: 1;
-    animation: shufflePop 0.8s ease forwards;
-  }
-  @keyframes shufflePop {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-    30% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
-    70% { opacity: 1; }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
-  }
+/* Belt color coding */
+.belt-8{--belt-color:#dddddd}
+.belt-7{--belt-color:#ff8c00}
+.belt-6{--belt-color:#ffd700}
+.belt-5{--belt-color:#228b22}
+.belt-4{--belt-color:#1e90ff}
+.belt-3{--belt-color:#8b4513}
+.belt-2{--belt-color:#5c3317}
+.belt-1{--belt-color:#3a2a1a}
+.belt-dan{--belt-color:#111}
 </style>
 </head>
 <body>
+<div id="bgKanji"></div>
 
-<div class="bg-kanji" id="bgKanji"></div>
-<div class="progress-bar" id="progressBar"></div>
-
-<div class="app">
-  <div class="header">
-    <div class="header-title">空手 · Karate</div>
+<!-- ═══ SETUP SCREEN ═══ -->
+<div class="screen" id="setupScreen">
+  <div class="setup-header">
+    <div class="logo">空手 · SGR Karate · Hørsholm</div>
+    <div class="setup-title">Pensum</div>
   </div>
 
-  <div class="cat-filter" id="catFilter"></div>
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-tile"><div class="stat-num" id="statStreak">0</div><div class="stat-lbl">🔥 Dage i træk</div></div>
+    <div class="stat-tile"><div class="stat-num" id="statSessions">0</div><div class="stat-lbl">Sessioner</div></div>
+    <div class="stat-tile"><div class="stat-num" id="statKnown">0</div><div class="stat-lbl">Kendte kort</div></div>
+  </div>
 
-  <div class="card-container" id="cardContainer">
+  <div class="section-label">Vælg bælte</div>
+  <div class="belt-grid" id="beltGrid"></div>
+
+  <div class="section-label">Vælg kategorier</div>
+  <div class="cat-grid" id="catGrid"></div>
+
+  <div class="section-label">Kortside der vises først</div>
+  <div class="dir-row">
+    <button class="dir-btn selected" id="dirJP" onclick="setDir('jp')">
+      <span class="dir-arrow">🇯🇵</span>Japansk → Dansk
+    </button>
+    <button class="dir-btn" id="dirDK" onclick="setDir('dk')">
+      <span class="dir-arrow">🇩🇰</span>Dansk → Japansk
+    </button>
+  </div>
+
+  <div class="section-label">Øvelsesform</div>
+  <div class="mode-row">
+    <div class="mode-card selected" id="modeFlash" onclick="setMode('flash')">
+      <div class="mode-icon">🃏</div>
+      <div class="mode-name">Flashcards</div>
+    </div>
+    <div class="mode-card" id="modeQuiz" onclick="setMode('quiz')">
+      <div class="mode-icon">❓</div>
+      <div class="mode-name">Quiz</div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="startBtn" onclick="startSession()" disabled>START</button>
+  <div class="card-count-label" id="countLabel"></div>
+</div>
+
+<!-- ═══ CARD SCREEN ═══ -->
+<div class="screen hidden" id="cardScreen">
+  <div class="progress-bar" id="progressBar"></div>
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-center">
+      <div class="topbar-belt" id="topBelt"></div>
+      <div class="topbar-cat" id="topCat"></div>
+    </div>
+    <button class="shuffle-btn" onclick="doShuffle()" title="Bland">⇄</button>
+  </div>
+
+  <div class="card-wrap">
     <div class="card" id="mainCard">
-      <div class="card-face card-front" id="cardFront"></div>
-      <div class="card-face card-back" id="cardBack"></div>
+      <div class="face face-front" id="cardFront"></div>
+      <div class="face face-back" id="cardBack"></div>
     </div>
   </div>
+  <div class="dots-row" id="dotsRow"></div>
 
-  <div class="nav-dots" id="navDots"></div>
-
-  <div class="swipe-hint">
-    <button class="swipe-btn" id="prevBtn">←</button>
-    <div class="counter" id="counter"></div>
-    <button class="swipe-btn" id="nextBtn">→</button>
+  <div class="bottom-nav">
+    <button class="nav-btn" id="prevBtn" onclick="goPrev()">←</button>
+    <div class="nav-counter" id="navCounter"></div>
+    <button class="nav-btn" id="nextBtn" onclick="goNext()">→</button>
   </div>
 </div>
 
-<div class="score-overlay" id="scoreOverlay">
-  <div class="score-title">FÆRDIG!</div>
-  <div class="score-sub">Runde afsluttet</div>
-  <div class="score-grid">
-    <div class="score-card">
-      <div class="score-num" id="scoreTotal">0</div>
-      <div class="score-lbl">Total</div>
+<!-- ═══ SCORE SCREEN ═══ -->
+<div class="screen hidden" id="scoreScreen">
+  <div class="score-inner">
+    <div class="score-title">FÆRDIG!</div>
+    <div class="score-sub" id="scoreSub"></div>
+    <div class="score-grid">
+      <div class="score-tile"><div class="score-num" id="sTotal" style="color:var(--accent)">0</div><div class="score-lbl">Kort</div></div>
+      <div class="score-tile"><div class="score-num" id="sCorrect" style="color:var(--green)">0</div><div class="score-lbl">Rigtige</div></div>
+      <div class="score-tile"><div class="score-num" id="sWrong" style="color:var(--red)">0</div><div class="score-lbl">Forkerte</div></div>
     </div>
-    <div class="score-card">
-      <div class="score-num" id="scoreCorrect" style="color:#50c878">0</div>
-      <div class="score-lbl">Rigtige</div>
-    </div>
-    <div class="score-card">
-      <div class="score-num" id="scoreWrong" style="color:var(--accent2)">0</div>
-      <div class="score-lbl">Forkerte</div>
+    <div class="score-actions">
+      <button class="btn-primary" onclick="restartSession()">PRØV IGEN</button>
+      <button class="btn-secondary" onclick="goBack()">TILBAGE</button>
     </div>
   </div>
-  <button class="restart-btn" id="restartBtn">PRØV IGEN</button>
 </div>
 
-<div class="shuffle-indicator" id="shuffleIndicator">BLANDET!</div>
+<div id="shuffleFlash"><span id="sfText">BLANDET!</span></div>
 
 <script>
-const DATA = [
-  { cat: 'Stød', catEn: '突き', icon: '👊', term: 'Seiken-gedan-tsuki', meaning: 'Stød mod skridtet' },
-  { cat: 'Stød', catEn: '突き', icon: '👊', term: 'Seiken-chudan-tsuki', meaning: 'Stød mod maven' },
-  { cat: 'Stød', catEn: '突き', icon: '👊', term: 'Seiken-jodan-tsuki', meaning: 'Stød mod hovedet' },
-  { cat: 'Stød', catEn: '突き', icon: '👊', term: 'Seiken-ago-uchi', meaning: 'Snapslag mod hagen' },
-  { cat: 'Parader', catEn: '受け', icon: '🛡️', term: 'Gedan-uke', meaning: 'Nedadgående parade' },
-  { cat: 'Parader', catEn: '受け', icon: '🛡️', term: 'Soto-uke', meaning: 'Udvendig parade' },
-  { cat: 'Parader', catEn: '受け', icon: '🛡️', term: 'Uchi-uke', meaning: 'Indvendig parade' },
-  { cat: 'Parader', catEn: '受け', icon: '🛡️', term: 'Jodan-uke', meaning: 'Opadgående parade' },
-  { cat: 'Spark', catEn: '蹴り', icon: '🦵', term: 'Kin-geri', meaning: 'Skridtspark' },
-  { cat: 'Spark', catEn: '蹴り', icon: '🦵', term: 'Mae-geri-chudan', meaning: 'Frontspark mod maven' },
-  { cat: 'Spark', catEn: '蹴り', icon: '🦵', term: 'Mae-geri-jodan', meaning: 'Frontspark mod hovedet' },
-  { cat: 'Spark', catEn: '蹴り', icon: '🦵', term: 'Hiza-geri', meaning: 'Knæspark' },
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const BELTS = [
+  { id:'8kyu', label:'8. kyu', name:'Hvidt bælte', color:'#ddd', cls:'belt-8' },
+  { id:'7kyu', label:'7. kyu', name:'Orange bælte', color:'#ff8c00', cls:'belt-7' },
+  { id:'6kyu', label:'6. kyu', name:'Gult bælte', color:'#ffd700', cls:'belt-6' },
+  { id:'5kyu', label:'5. kyu', name:'Grønt bælte', color:'#228b22', cls:'belt-5' },
+  { id:'4kyu', label:'4. kyu', name:'Blåt bælte', color:'#1e90ff', cls:'belt-4' },
+  { id:'3kyu', label:'3. kyu', name:'Brunt bælte', color:'#8b4513', cls:'belt-3' },
+  { id:'2kyu', label:'2. kyu', name:'Brunt m. 1 sort', color:'#5c3317', cls:'belt-2' },
+  { id:'1kyu', label:'1. kyu', name:'Brunt m. 2 sort', color:'#3a2a1a', cls:'belt-1' },
 ];
 
-const KANJI = ['空', '手', '道', '力', '技', '蹴', '突', '受'];
-let deck = [...DATA];
-let currentIdx = 0;
-let flipped = false;
-let activeFilter = 'Alle';
+const CARDS = {
+  '8kyu': [
+    { cat:'Stillinger', jp:'Fudo-dachi', dk:'Klarstilling' },
+    { cat:'Stillinger', jp:'Shiko-dachi', dk:'Sumostilling' },
+    { cat:'Stillinger', jp:'Zenkutsu-dachi', dk:'Forlænsstilling' },
+    { cat:'Stød', jp:'Seiken-gedan-tsuki', dk:'Stød mod skridtet' },
+    { cat:'Stød', jp:'Seiken-chudan-tsuki', dk:'Stød mod maven' },
+    { cat:'Stød', jp:'Seiken-jodan-tsuki', dk:'Stød mod hovedet' },
+    { cat:'Stød', jp:'Seiken-ago-uchi', dk:'Snapslag mod hagen' },
+    { cat:'Parader', jp:'Gedan-uke', dk:'Nedadgående parade' },
+    { cat:'Parader', jp:'Soto-uke', dk:'Udvendig parade' },
+    { cat:'Parader', jp:'Uchi-uke', dk:'Indvendig parade' },
+    { cat:'Parader', jp:'Jodan-uke', dk:'Opadgående parade' },
+    { cat:'Spark', jp:'Kin-geri', dk:'Skridtspark' },
+    { cat:'Spark', jp:'Mae-geri-chudan', dk:'Frontspark mod maven' },
+    { cat:'Spark', jp:'Mae-geri-jodan', dk:'Frontspark mod hovedet' },
+    { cat:'Spark', jp:'Hiza-geri', dk:'Knæspark' },
+  ],
+  '7kyu': [
+    { cat:'Stillinger', jp:'Sanchin-dachi', dk:'Spændt stilling med kraftfuldt åndedræt' },
+    { cat:'Stillinger', jp:'Kamae', dk:'Kampstilling' },
+    { cat:'Stød', jp:'Uraken-shomen-ganmen-uchi', dk:'Fremadrettet omvendt knoslag mod hovedet' },
+    { cat:'Stød', jp:'Uraken-sayu-ganmen-uchi', dk:'Sidelæns omvendt knoslag mod hovedet' },
+    { cat:'Stød', jp:'Uraken-hizo-uchi', dk:'Sidelæns omvendt knoslag mod ribbenene' },
+    { cat:'Stød', jp:'Uraken-uchi-uchi', dk:'Indvendig omvendt knoslag' },
+    { cat:'Stød', jp:'Uraken-mawashi-uchi', dk:'Cirkelslag' },
+    { cat:'Stød', jp:'Uraken-shita-tsuki', dk:'Lavt omvendt stød' },
+    { cat:'Spark', jp:'Kanzetsu-geri', dk:'Spark mod knæled' },
+    { cat:'Spark', jp:'Yoko-geri', dk:'Sidespark' },
+    { cat:'Spark', jp:'Mawashi-geri', dk:'Cirkelspark' },
+    { cat:'Kata', jp:'Taikyoku-sono-ichi', dk:'Første grundlæggende kata' },
+  ],
+  '6kyu': [
+    { cat:'Stillinger', jp:'Kokutsu-dachi', dk:'Baglæns stilling' },
+    { cat:'Stillinger', jp:'Neko-ashi-dachi', dk:'Kattestilling (lille baglæns stilling)' },
+    { cat:'Stød', jp:'Shuto-ganmen-soto-uchi', dk:'Udvendig håndkantslag mod hovedet' },
+    { cat:'Stød', jp:'Shuto-hizo-uchi', dk:'Håndkantslag mod ribbenene' },
+    { cat:'Stød', jp:'Shuto-sakotsu-uchi', dk:'Håndkantslag mod kravebenet' },
+    { cat:'Stød', jp:'Shuto-sakotsu-uchikomi', dk:'Stødende håndkantslag mod kravebenet' },
+    { cat:'Stød', jp:'Shuto-ganmen-uchi-uchi', dk:'Indvendig håndkantslag mod hovedet' },
+    { cat:'Parader', jp:'Shuto-mawashi-uke', dk:'Dobbelt cirkelparade (side)' },
+    { cat:'Spark', jp:'Ushiro-geri', dk:'Baglæns spark' },
+    { cat:'Spark', jp:'Uchi-mawashi-geri', dk:'Indvendig cirkelspark' },
+    { cat:'Kata', jp:'Pinan-sono-ichi', dk:'Første pinan kata' },
+  ],
+  '5kyu': [
+    { cat:'Stød', jp:'Jodan-hiji-ate', dk:'Albueslag mod hovedet' },
+    { cat:'Stød', jp:'Chudan-hiji-ate', dk:'Albueslag mod maven' },
+    { cat:'Stød', jp:'Jodan-age-hiji-ate', dk:'Opadgående albueslag mod hovedet' },
+    { cat:'Stød', jp:'Yoko-hiji-ate', dk:'Sidelæns albueslag' },
+    { cat:'Stød', jp:'Ushiro-hiji-ate', dk:'Bagudrettet albueslag' },
+    { cat:'Stød', jp:'Oroshi-hiji-ate', dk:'Nedadgående albueslag' },
+    { cat:'Stød', jp:'Nukite yohon/nihon', dk:'Fingerstik (mave, hals, øjne)' },
+    { cat:'Parader', jp:'Shuto-uke', dk:'Håndkantparade' },
+    { cat:'Kata', jp:'Pinan-sono-ni', dk:'Anden pinan kata' },
+  ],
+  '4kyu': [
+    { cat:'Stød', jp:'Shotei-uchi-Gedan', dk:'Slag med håndfladen mod skridtet' },
+    { cat:'Stød', jp:'Shotei-uchi-Chudan', dk:'Slag med håndfladen mod maven' },
+    { cat:'Stød', jp:'Shotei-uchi-Jodan', dk:'Slag med håndfladen mod hovedet' },
+    { cat:'Parader', jp:'Shotei-uke-Gedan', dk:'Parade med håndfladen mod skridtet' },
+    { cat:'Parader', jp:'Shotei-uke-Chudan', dk:'Parade med håndfladen mod maven' },
+    { cat:'Parader', jp:'Shotei-uke-Jodan', dk:'Parade med håndfladen mod hovedet' },
+    { cat:'Parader', jp:'Gedan-uchi-uke', dk:'Kombination af nedadgående og indvendig parade' },
+    { cat:'Parader', jp:'Mae-mawashi-uke', dk:'Dobbelt cirkelparade (front)' },
+    { cat:'Spark', jp:'Kake-geri', dk:'Krogspark (omvendt cirkelspark)' },
+    { cat:'Spark', jp:'Mae-tobi-geri', dk:'Flyvende frontspark' },
+    { cat:'Spark', jp:'Ushiro-mawashi-geri', dk:'Baglæns cirkelspark' },
+    { cat:'Kata', jp:'Pinan-sono-san', dk:'Tredje pinan kata' },
+  ],
+  '3kyu': [
+    { cat:'Stød', jp:'Haito-uchi', dk:'Slag med indersiden af hånden (tinding, ribben, skridt)' },
+    { cat:'Stød', jp:'Tettsui-uchi', dk:'Slag med hammerhånd (5 varianter)' },
+    { cat:'Parader', jp:'Kake-uke', dk:'Krogparade' },
+    { cat:'Spark', jp:'Ushiro-tobi-geri', dk:'Flyvende baglæns spark' },
+    { cat:'Kata', jp:'Pinan-sono-yon', dk:'Fjerde pinan kata' },
+  ],
+  '2kyu': [
+    { cat:'Stød', jp:'Hiraken', dk:'Slag med fingerled mod hals' },
+    { cat:'Parader', jp:'Morote-kake-uke', dk:'Forstærket krogparade' },
+    { cat:'Spark', jp:'Tobi-ushiro-mawashi-geri', dk:'Flyvende baglæns cirkelspark' },
+    { cat:'Kata', jp:'Pinan-sono-go', dk:'Femte pinan kata' },
+    { cat:'Kata', jp:'Tsuki no kata', dk:'Stød-kata' },
+  ],
+  '1kyu': [
+    { cat:'Kata', jp:'Geksai-dai', dk:'Større Geksai kata' },
+    { cat:'Kata', jp:'Geksai-sho', dk:'Mindre Geksai kata' },
+  ],
+};
+
+// ═══════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════
+const LS = {
+  get(k, def) { try { const v = localStorage.getItem('sgr_'+k); return v !== null ? JSON.parse(v) : def; } catch(e) { return def; } },
+  set(k, v)   { try { localStorage.setItem('sgr_'+k, JSON.stringify(v)); } catch(e) {} },
+};
+
+function loadPrefs() {
+  const prefs = LS.get('prefs', {});
+  if (prefs.belts)  { selectedBelts = prefs.belts; }
+  if (prefs.cats)   { selectedCats  = prefs.cats; }
+  if (prefs.dir)    { setDir(prefs.dir); }
+  if (prefs.mode)   { setMode(prefs.mode); }
+}
+
+function savePrefs() {
+  LS.set('prefs', { belts: selectedBelts, cats: selectedCats, dir, mode });
+}
+
+// known[jp_term] = true/false
+function getKnown() { return LS.get('known', {}); }
+function setKnown(jp, val) {
+  const k = getKnown();
+  k[jp] = val;
+  LS.set('known', k);
+  updateStatsBar();
+}
+
+// Streak
+function updateStreak() {
+  const today = new Date().toDateString();
+  const last  = LS.get('lastDay', '');
+  const streak = LS.get('streak', 0);
+  const sessions = LS.get('sessions', 0);
+  LS.set('sessions', sessions + 1);
+  if (last === today) return; // already counted today
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  LS.set('streak', last === yesterday ? streak + 1 : 1);
+  LS.set('lastDay', today);
+}
+
+function updateStatsBar() {
+  const known   = getKnown();
+  const knownN  = Object.values(known).filter(Boolean).length;
+  const streak  = LS.get('streak', 0);
+  const sessions= LS.get('sessions', 0);
+  document.getElementById('statStreak').textContent   = streak;
+  document.getElementById('statSessions').textContent = sessions;
+  document.getElementById('statKnown').textContent    = knownN;
+}
+
+
+let selectedBelts = [];
+let selectedCats = [];
 let mode = 'flash'; // flash | quiz
-let score = { correct: 0, wrong: 0 };
+let dir = 'jp'; // jp | dk
+let deck = [];
+let idx = 0;
+let flipped = false;
 let quizAnswered = false;
+let score = { correct:0, wrong:0 };
 
-// Background kanji
-function initBgKanji() {
-  const container = document.getElementById('bgKanji');
-  KANJI.forEach((k, i) => {
-    const span = document.createElement('span');
-    span.textContent = k;
-    const left = Math.random() * 90;
-    const dur = 12 + Math.random() * 18;
-    const delay = -(Math.random() * dur);
-    span.style.cssText = `left:${left}%;animation-duration:${dur}s;animation-delay:${delay}s`;
-    container.appendChild(span);
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+function init() {
+  // Background kanji
+  const kanji = ['空','手','道','力','技','蹴','突','受','形','組'];
+  const bg = document.getElementById('bgKanji');
+  kanji.forEach(k => {
+    const s = document.createElement('span');
+    s.textContent = k;
+    s.style.cssText = `left:${Math.random()*88}%;animation-duration:${14+Math.random()*20}s;animation-delay:${-(Math.random()*20)}s`;
+    bg.appendChild(s);
   });
-}
 
-// Filter
-function initFilters() {
-  const cats = ['Alle', 'Stød', 'Parader', 'Spark'];
-  const container = document.getElementById('catFilter');
-  cats.forEach(c => {
+  // Belt buttons
+  const bg2 = document.getElementById('beltGrid');
+  const known = getKnown();
+  BELTS.forEach(b => {
+    const cards = CARDS[b.id] || [];
+    const knownCount = cards.filter(c => known[c.jp]).length;
     const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (c === 'Alle' ? ' active' : '');
-    btn.textContent = c;
-    btn.onclick = () => setFilter(c);
-    container.appendChild(btn);
+    btn.className = `belt-btn ${b.cls}`;
+    btn.id = `belt-${b.id}`;
+    btn.innerHTML = `<div class="belt-kyu">${b.label}</div><div class="belt-name">${b.name}</div><div class="belt-count">${cards.length} kort</div>${knownCount > 0 ? `<div class="belt-progress">✓ ${knownCount}/${cards.length} kendte</div>` : ''}`;
+    btn.style.setProperty('--belt-color', b.color);
+    btn.onclick = () => toggleBelt(b.id, btn);
+    bg2.appendChild(btn);
   });
+
+  loadPrefs();
+  // Re-apply belt selected state
+  selectedBelts.forEach(id => {
+    const btn = document.getElementById(`belt-${id}`);
+    if (btn) btn.classList.add('selected');
+  });
+  updateCatGrid();
+  updateStatsBar();
 }
 
-function setFilter(cat) {
-  activeFilter = cat;
-  document.querySelectorAll('.cat-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent === cat);
+function getAllCats() {
+  const cats = new Set();
+  selectedBelts.forEach(bid => {
+    (CARDS[bid]||[]).forEach(c => cats.add(c.cat));
   });
-  deck = cat === 'Alle' ? [...DATA] : DATA.filter(d => d.cat === cat);
-  currentIdx = 0;
-  score = { correct: 0, wrong: 0 };
-  renderCard(false);
+  return [...cats];
 }
 
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+function updateCatGrid() {
+  const cg = document.getElementById('catGrid');
+  const cats = getAllCats();
+  cg.innerHTML = '';
+  if (!cats.length) return;
+  
+  // Keep only valid selected cats
+  selectedCats = selectedCats.filter(c => cats.includes(c));
+  if (!selectedCats.length) selectedCats = [...cats];
+
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-toggle' + (selectedCats.includes(cat) ? ' selected' : '');
+    btn.textContent = cat;
+    btn.onclick = () => toggleCat(cat, btn);
+    cg.appendChild(btn);
+  });
+  updateCountLabel();
+}
+
+function toggleBelt(id, btn) {
+  if (selectedBelts.includes(id)) {
+    selectedBelts = selectedBelts.filter(b => b !== id);
+    btn.classList.remove('selected');
+  } else {
+    selectedBelts.push(id);
+    btn.classList.add('selected');
   }
+  selectedCats = [];
+  updateCatGrid();
 }
 
-function renderCard(animate, dir = 'right') {
-  const card = DATA[0]; // placeholder
-  const c = deck[currentIdx];
+function toggleCat(cat, btn) {
+  if (selectedCats.includes(cat)) {
+    if (selectedCats.length === 1) return; // min 1
+    selectedCats = selectedCats.filter(c => c !== cat);
+    btn.classList.remove('selected');
+  } else {
+    selectedCats.push(cat);
+    btn.classList.add('selected');
+  }
+  updateCountLabel();
+}
+
+function updateCountLabel() {
+  const n = buildDeck().length;
+  const btn = document.getElementById('startBtn');
+  const lbl = document.getElementById('countLabel');
+  btn.disabled = n === 0;
+  lbl.textContent = n > 0 ? `${n} flashkort klar` : 'Vælg mindst ét bælte';
+}
+
+function buildDeck() {
+  const cards = [];
+  selectedBelts.forEach(bid => {
+    (CARDS[bid]||[]).forEach(c => {
+      if (selectedCats.includes(c.cat)) {
+        cards.push({ ...c, belt: bid });
+      }
+    });
+  });
+  return cards;
+}
+
+function setDir(d) {
+  dir = d;
+  document.getElementById('dirJP').classList.toggle('selected', d==='jp');
+  document.getElementById('dirDK').classList.toggle('selected', d==='dk');
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeFlash').classList.toggle('selected', m==='flash');
+  document.getElementById('modeQuiz').classList.toggle('selected', m==='quiz');
+}
+
+// ═══════════════════════════════════════
+// SESSION
+// ═══════════════════════════════════════
+function startSession() {
+  deck = buildDeck();
+  shuffle(deck);
+  idx = 0;
+  score = { correct:0, wrong:0 };
+  flipped = false;
+  savePrefs();
+  updateStreak();
+  updateStatsBar();
+
+  // Topbar
+  const beltNames = selectedBelts.map(b => BELTS.find(x=>x.id===b)?.label).join(', ');
+  document.getElementById('topBelt').textContent = beltNames;
+  document.getElementById('topCat').textContent = selectedCats.join(' · ');
+
+  showScreen('cardScreen');
+  renderCard();
+}
+
+function restartSession() {
+  shuffle(deck);
+  idx = 0;
+  score = { correct:0, wrong:0 };
+  flipped = false;
+  showScreen('cardScreen');
+  renderCard();
+}
+
+function goBack() {
+  showScreen('setupScreen');
+}
+
+function showScreen(id) {
+  ['setupScreen','cardScreen','scoreScreen'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+// ═══════════════════════════════════════
+// CARD RENDERING
+// ═══════════════════════════════════════
+function catIcon(cat) {
+  const icons = { Stillinger:'🥋', Stød:'👊', Parader:'🛡️', Spark:'🦵', Kata:'📜' };
+  return icons[cat] || '⚡';
+}
+
+function renderCard() {
+  const c = deck[idx];
   flipped = false;
   quizAnswered = false;
+  document.getElementById('mainCard').classList.remove('flipped');
 
   const front = document.getElementById('cardFront');
   const back = document.getElementById('cardBack');
-  const mainCard = document.getElementById('mainCard');
-  mainCard.classList.remove('flipped');
+
+  const frontTerm = dir === 'jp' ? c.jp : c.dk;
+  const backTerm  = dir === 'jp' ? c.dk : c.jp;
+  const frontLabel = dir === 'jp' ? 'Japansk' : 'Dansk';
+  const backLabel  = dir === 'jp' ? 'Dansk' : 'Japansk';
 
   if (mode === 'flash') {
+    const known = getKnown();
+    const isKnown = known[c.jp] === true;
     front.innerHTML = `
-      <div class="cat-icon">${c.icon}</div>
-      <div class="japanese-term">${c.term}</div>
-      <div style="width:40px;height:1px;background:var(--border);margin:20px auto"></div>
-      <div style="font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">${c.cat} · ${c.catEn}</div>
-      <div class="hint-text"><span>Tryk for at se svar</span></div>
+      <div class="card-cat-badge">${catIcon(c.cat)} ${c.cat}</div>
+      <div class="card-term">${frontTerm}</div>
+      <div class="card-sub">${frontLabel}</div>
+      <div class="tap-hint">tryk for svar</div>
     `;
     back.innerHTML = `
-      <div class="cat-icon">${c.icon}</div>
-      <div class="danish-translation">${c.meaning}</div>
-      <div class="term-reminder">${c.term}</div>
-      <div class="category-label">${c.cat}</div>
+      <div class="card-cat-badge">${catIcon(c.cat)} ${c.cat}</div>
+      <div class="card-meaning">${backTerm}</div>
+      <div class="card-back-term">${frontTerm}</div>
+      <div class="card-back-cat">${backLabel}</div>
+      <div class="know-row">
+        <button class="know-btn no" onclick="markCard(false)">✗ Vidste det ikke</button>
+        <button class="know-btn yes" onclick="markCard(true)">✓ Vidste det</button>
+      </div>
     `;
-    front.style.cursor = 'pointer';
-    front.onclick = flipCard;
-    back.onclick = flipCard;
+    document.getElementById('mainCard').style.cursor = 'pointer';
   } else {
-    // Quiz mode
-    const opts = buildQuizOptions(c);
+    // Quiz mode - show term, 4 options
+    const opts = buildQuizOpts(c, backTerm);
     front.innerHTML = `
-      <div class="cat-icon">${c.icon}</div>
-      <div class="japanese-term">${c.term}</div>
-      <div style="width:40px;height:1px;background:var(--border);margin:16px auto"></div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">${c.cat}</div>
-      <div class="quiz-options" id="quizOpts"></div>
+      <div class="card-cat-badge">${catIcon(c.cat)} ${c.cat}</div>
+      <div class="card-term">${frontTerm}</div>
+      <div class="card-sub">${frontLabel}</div>
+      <div class="quiz-opts" id="quizOpts"></div>
     `;
-    front.style.cursor = 'default';
-    front.onclick = null;
     back.innerHTML = '';
-    const optsContainer = document.getElementById('quizOpts');
+    document.getElementById('mainCard').style.cursor = 'default';
+    const container = document.getElementById('quizOpts');
     opts.forEach(opt => {
       const btn = document.createElement('button');
-      btn.className = 'quiz-opt';
+      btn.className = 'qopt';
       btn.textContent = opt;
-      btn.onclick = () => handleQuizAnswer(opt, c.meaning, btn);
-      optsContainer.appendChild(btn);
+      btn.onclick = (e) => { e.stopPropagation(); handleAnswer(opt, backTerm, btn); };
+      container.appendChild(btn);
     });
   }
 
@@ -684,37 +753,49 @@ function renderCard(animate, dir = 'right') {
   updateCounter();
 }
 
-function buildQuizOptions(correct) {
-  const pool = deck.filter(d => d.meaning !== correct.meaning);
+function buildQuizOpts(correct, correctAnswer) {
+  const pool = deck.filter(d => {
+    const ans = dir === 'jp' ? d.dk : d.jp;
+    return ans !== correctAnswer;
+  });
   shuffle(pool);
-  const wrong = pool.slice(0, 3).map(d => d.meaning);
-  const all = [...wrong, correct.meaning];
+  const wrongs = [...new Set(pool.map(d => dir==='jp' ? d.dk : d.jp))].slice(0,3);
+  const all = [...wrongs, correctAnswer];
+  // Pad if not enough unique options
+  while(all.length < 4) all.push('–');
   shuffle(all);
-  return all;
+  return all.slice(0,4);
 }
 
-function handleQuizAnswer(chosen, correct, btn) {
+function handleAnswer(chosen, correct, btn) {
   if (quizAnswered) return;
   quizAnswered = true;
-  const isCorrect = chosen === correct;
-  if (isCorrect) {
-    score.correct++;
-    btn.classList.add('correct');
-  } else {
+  const ok = chosen === correct;
+  if (ok) { score.correct++; btn.classList.add('correct'); }
+  else {
     score.wrong++;
     btn.classList.add('wrong');
-    document.querySelectorAll('.quiz-opt').forEach(b => {
+    document.querySelectorAll('.qopt').forEach(b => {
       if (b.textContent === correct) b.classList.add('correct');
     });
   }
-  document.querySelectorAll('.quiz-opt').forEach(b => b.setAttribute('disabled', true));
+  document.querySelectorAll('.qopt').forEach(b => b.setAttribute('disabled',true));
   setTimeout(() => {
-    if (currentIdx < deck.length - 1) {
-      goNext();
-    } else {
-      showScore();
-    }
-  }, 1100);
+    if (idx < deck.length - 1) { idx++; animateCard('left'); }
+    else showScore();
+  }, 1000);
+}
+
+function handleCardTap() {
+  if (mode === 'quiz') return;
+  flipCard();
+}
+
+function markCard(knew) {
+  const c = deck[idx];
+  setKnown(c.jp, knew);
+  if (idx < deck.length - 1) { idx++; animateCard('left'); }
+  else showScore();
 }
 
 function flipCard() {
@@ -723,100 +804,100 @@ function flipCard() {
 }
 
 function goNext() {
-  if (currentIdx < deck.length - 1) {
-    currentIdx++;
-    animateCard('left');
-  } else if (mode === 'flash') {
-    showScore();
-  }
+  if (idx < deck.length - 1) { idx++; animateCard('left'); }
+  else if (mode === 'flash') showScore();
 }
 
 function goPrev() {
-  if (currentIdx > 0) {
-    currentIdx--;
-    animateCard('right');
-  }
+  if (idx > 0) { idx--; animateCard('right'); }
 }
 
 function animateCard(dir) {
-  const mainCard = document.getElementById('mainCard');
-  const outClass = dir === 'left' ? 'slide-out-left' : 'slide-out-right';
-  const inClass = dir === 'left' ? 'slide-in-left' : 'slide-in-right';
-  mainCard.classList.add(outClass);
+  const card = document.getElementById('mainCard');
+  const outCls = dir==='left' ? 'out-left' : 'out-right';
+  const inCls  = dir==='left' ? 'in-left'  : 'in-right';
+  card.classList.add(outCls);
   setTimeout(() => {
-    mainCard.classList.remove(outClass);
-    renderCard(false, dir);
-    mainCard.classList.add(inClass);
-    setTimeout(() => mainCard.classList.remove(inClass), 350);
-  }, 300);
+    card.classList.remove(outCls);
+    renderCard();
+    card.classList.add(inCls);
+    setTimeout(() => card.classList.remove(inCls), 320);
+  }, 280);
+}
+
+function doShuffle() {
+  shuffle(deck);
+  idx = 0;
+  renderCard();
+  const el = document.getElementById('sfText');
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 700);
 }
 
 function updateProgress() {
-  const pct = ((currentIdx + 1) / deck.length) * 100;
-  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressBar').style.width = ((idx+1)/deck.length*100)+'%';
 }
 
 function updateDots() {
-  const container = document.getElementById('navDots');
-  const max = Math.min(deck.length, 12);
-  container.innerHTML = '';
-  for (let i = 0; i < max; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'dot' + (i === currentIdx ? ' active' : '');
-    container.appendChild(dot);
+  const row = document.getElementById('dotsRow');
+  const max = Math.min(deck.length, 15);
+  row.innerHTML = '';
+  for (let i=0; i<max; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===idx ? ' active' : i<idx ? ' done' : '');
+    row.appendChild(d);
   }
 }
 
 function updateCounter() {
-  document.getElementById('counter').innerHTML = `<b>${currentIdx + 1}</b> / ${deck.length}`;
+  document.getElementById('navCounter').innerHTML = `<b>${idx+1}</b> / ${deck.length}`;
 }
 
 function showScore() {
-  document.getElementById('scoreTotal').textContent = deck.length;
-  document.getElementById('scoreCorrect').textContent = score.correct;
-  document.getElementById('scoreWrong').textContent = mode === 'quiz' ? score.wrong : deck.length - score.correct;
-  document.getElementById('scoreOverlay').classList.add('visible');
+  const beltNames = selectedBelts.map(b => BELTS.find(x=>x.id===b)?.label).join(', ');
+  document.getElementById('scoreSub').textContent = beltNames + ' · ' + selectedCats.join(', ');
+  document.getElementById('sTotal').textContent = deck.length;
+  document.getElementById('sCorrect').textContent = mode==='quiz' ? score.correct : '–';
+  document.getElementById('sWrong').textContent = mode==='quiz' ? score.wrong : '–';
+  showScreen('scoreScreen');
 }
 
-function restart() {
-  document.getElementById('scoreOverlay').classList.remove('visible');
-  shuffle(deck);
-  currentIdx = 0;
-  score = { correct: 0, wrong: 0 };
-  const ind = document.getElementById('shuffleIndicator');
-  ind.classList.add('show');
-  setTimeout(() => ind.classList.remove('show'), 800);
-  renderCard(false);
-}
-
-// Touch swipe
-let touchStartX = 0;
-let touchStartY = 0;
-document.getElementById('cardContainer').addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-}, { passive: true });
-
-document.getElementById('cardContainer').addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-    if (dx < 0) goNext();
-    else goPrev();
-  } else if (Math.abs(dy) < 20 && Math.abs(dx) < 20 && mode === 'flash') {
-    flipCard();
+// ═══════════════════════════════════════
+// TOUCH SWIPE + TAP
+// ═══════════════════════════════════════
+let tx=0, ty=0, tTime=0;
+const cardEl = document.getElementById('mainCard');
+cardEl.addEventListener('click', e => e.preventDefault(), {passive:false});
+cardEl.addEventListener('touchstart', e => {
+  tx = e.touches[0].clientX;
+  ty = e.touches[0].clientY;
+  tTime = Date.now();
+}, {passive:true});
+cardEl.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  const dy = e.changedTouches[0].clientY - ty;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  const dt = Date.now() - tTime;
+  if (dist < 12 && dt < 400) {
+    if (mode !== 'quiz') flipCard();
+  } else if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+    dx < 0 ? goNext() : goPrev();
   }
-}, { passive: true });
+}, {passive:true});
 
-document.getElementById('prevBtn').onclick = goPrev;
-document.getElementById('nextBtn').onclick = goNext;
-document.getElementById('restartBtn').onclick = restart;
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function shuffle(arr) {
+  for (let i=arr.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+}
 
-// Init
-initBgKanji();
-initFilters();
-shuffle(deck);
-renderCard(false);
+init();
 </script>
 </body>
 </html>
