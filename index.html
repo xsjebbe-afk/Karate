@@ -869,7 +869,11 @@ function showScore() {
 // ═══════════════════════════════════════
 let tx=0, ty=0, tTime=0;
 const cardEl = document.getElementById('mainCard');
-cardEl.addEventListener('click', e => e.preventDefault(), {passive:false});
+cardEl.addEventListener('click', e => {
+  // Only handle click from mouse (not touch, which fires its own touchend)
+  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+  if (mode !== 'quiz') flipCard();
+});
 cardEl.addEventListener('touchstart', e => {
   tx = e.touches[0].clientX;
   ty = e.touches[0].clientY;
