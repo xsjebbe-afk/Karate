@@ -711,16 +711,14 @@ function renderCard() {
     const known = getKnown();
     const isKnown = known[c.jp] === true;
     front.innerHTML = `
-      <div class="card-cat-badge">${catIcon(c.cat)} ${c.cat}</div>
       <div class="card-term">${frontTerm}</div>
       <div class="card-sub">${frontLabel}</div>
       <div class="tap-hint">tryk for svar</div>
     `;
     back.innerHTML = `
-      <div class="card-cat-badge">${catIcon(c.cat)} ${c.cat}</div>
       <div class="card-meaning">${backTerm}</div>
       <div class="card-back-term">${frontTerm}</div>
-      <div class="card-back-cat">${backLabel}</div>
+      <div class="card-back-cat">${backLabel} · ${c.cat}</div>
       <div class="know-row">
         <button class="know-btn no" ontouchend="event.stopPropagation()" onclick="markCard(false)">✗ Vidste det ikke</button>
         <button class="know-btn yes" ontouchend="event.stopPropagation()" onclick="markCard(true)">✓ Vidste det</button>
@@ -731,7 +729,6 @@ function renderCard() {
     // Quiz mode - show term, 4 options
     const opts = buildQuizOpts(c, backTerm);
     front.innerHTML = `
-      <div class="card-cat-badge">${catIcon(c.cat)} ${c.cat}</div>
       <div class="card-term">${frontTerm}</div>
       <div class="card-sub">${frontLabel}</div>
       <div class="quiz-opts" id="quizOpts"></div>
