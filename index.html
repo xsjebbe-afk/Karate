@@ -722,8 +722,8 @@ function renderCard() {
       <div class="card-back-term">${frontTerm}</div>
       <div class="card-back-cat">${backLabel}</div>
       <div class="know-row">
-        <button class="know-btn no" onclick="markCard(false)">✗ Vidste det ikke</button>
-        <button class="know-btn yes" onclick="markCard(true)">✓ Vidste det</button>
+        <button class="know-btn no" ontouchend="event.stopPropagation()" onclick="markCard(false)">✗ Vidste det ikke</button>
+        <button class="know-btn yes" ontouchend="event.stopPropagation()" onclick="markCard(true)">✓ Vidste det</button>
       </div>
     `;
     document.getElementById('mainCard').style.cursor = 'pointer';
@@ -865,31 +865,48 @@ function showScore() {
 }
 
 // ═══════════════════════════════════════
-// TOUCH SWIPE + TAP
+// UNIFIED POINTER HANDLER (mouse + touch)
 // ═══════════════════════════════════════
-let tx=0, ty=0, tTime=0;
+let px=0, py=0, pTime=0, pMoved=false;
 const cardEl = document.getElementById('mainCard');
-cardEl.addEventListener('click', e => {
-  // Only handle click from mouse (not touch, which fires its own touchend)
-  if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-  if (mode !== 'quiz') flipCard();
-});
-cardEl.addEventListener('touchstart', e => {
-  tx = e.touches[0].clientX;
-  ty = e.touches[0].clientY;
-  tTime = Date.now();
-}, {passive:true});
-cardEl.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - tx;
-  const dy = e.changedTouches[0].clientY - ty;
+
+function onPointerDown(x, y) {
+  px=x; py=y; pTime=Date.now(); pMoved=false;
+}
+function onPointerMove(x, y) {
+  if (Math.sqrt((x-px)**2+(y-py)**2) > 8) pMoved=true;
+}
+function onPointerUp(x, y) {
+  const dx = x - px;
+  const dy = y - py;
   const dist = Math.sqrt(dx*dx + dy*dy);
-  const dt = Date.now() - tTime;
-  if (dist < 12 && dt < 400) {
+  const dt = Date.now() - pTime;
+  if (!pMoved && dist < 12 && dt < 500) {
+    // Tap — flip card (quiz buttons handle themselves)
     if (mode !== 'quiz') flipCard();
   } else if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+    // Swipe
     dx < 0 ? goNext() : goPrev();
   }
+}
+
+// Touch
+cardEl.addEventListener('touchstart', e => {
+  onPointerDown(e.touches[0].clientX, e.touches[0].clientY);
 }, {passive:true});
+cardEl.addEventListener('touchmove', e => {
+  onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:true});
+cardEl.addEventListener('touchend', e => {
+  onPointerUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+  // Prevent the ghost click that fires ~300ms later on mobile
+  e.preventDefault();
+}, {passive:false});
+
+// Mouse
+cardEl.addEventListener('mousedown', e => onPointerDown(e.clientX, e.clientY));
+cardEl.addEventListener('mousemove', e => { if (e.buttons) onPointerMove(e.clientX, e.clientY); });
+cardEl.addEventListener('mouseup',   e => onPointerUp(e.clientX, e.clientY));
 
 // ═══════════════════════════════════════
 // UTILS
